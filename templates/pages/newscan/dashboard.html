@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<script src="static/js/spiderfoot.newscan.js"></script>
+
+<h2>New Scan</h2>
+
+<div class="pt-4">
+  <form class="form" action="api/startscan" method="POST">
+    <div class="row">
+      <!-- Scan Name & Target -->
+      <div class="col-sm-3 p-0">
+        <div class="mb-3">
+          <label for="scanname" class="form-label">Scan Name</label>
+          <input class="form-control" type="text" id="scanname" name="scanname" value="{{ scanname }}" placeholder="The name of this scan.">
+        </div>
+        <div class="mb-3">
+          <label for="scantarget" class="form-label">Scan Target</label>
+          <input class="form-control" type="text" value="{{ scantarget }}" id="scantarget" name="scantarget" placeholder="The target of your scan.">
+        </div>
+      </div>
+
+      <!-- Help Panel -->
+      <div class="col-sm-9 ps-3" style="font-size: 12px;">
+        <div class="card bg-light">
+          <div class="card-body p-2 m-2">
+            <div class="row mb-2">
+              <div class="col-sm-12">
+                <i class="bi bi-question-circle"></i>&nbsp;&nbsp;
+                Your scan target may be one of the following. SpiderFoot will automatically detect the target type based on the format of your input:
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-sm-6">
+                <b>Domain Name</b>: e.g. <i>example.com</i><br>
+                <b>IPv4 Address</b>: e.g. <i>1.2.3.4</i><br>
+                <b>IPv6 Address</b>: e.g. <i>2606:4700:4700::1111</i><br>
+                <b>Hostname/Sub-domain</b>: e.g. <i>abc.example.com</i><br>
+                <b>Subnet</b>: e.g. <i>1.2.3.0/24</i><br>
+                <b>Bitcoin Address</b>: e.g. 1HesYJSP1QqcyPEjnQ9vzBL1wujruNGe7R
+              </div>
+              <div class="col-sm-6">
+                <b>E-mail address</b>: e.g. <i>bob@example.com</i><br>
+                <b>Phone Number</b>: e.g. <i>+12345678901</i> (E.164 format)<br>
+                <b>Human Name</b>: e.g. <i>"John Smith"</i> (must be in quotes)<br>
+                <b>Username</b>: e.g. <i>"jsmith2000"</i> (must be in quotes)<br>
+                <b>Network ASN</b>: e.g. <i>1234</i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="mt-3">
+      <ul class="nav nav-tabs">
+        <li class="nav-item">
+          <a class="nav-link active" id="usetab" href="#">By Use Case</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="typetab" href="#">By Required Data</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="moduletab" href="#">By Module</a>
+        </li>
+        <div class="btn-group btn-group-sm float-end d-none" role="group" id="selectors">
+          <button id="btn-select-all" type="button" class="btn btn-info">Select All</button>&nbsp;&nbsp;
+          <button id="btn-deselect-all" type="button" class="btn btn-info">De-Select All</button>
+        </div>
+      </ul>
+
+      <!-- Use Case Table -->
+      <table class="table table-striped table-sm" id="usetable">
+        <tr>
+          <td style="width: 50px">
+            <input class="form-check-input" type="radio" name="usecase" value="all" id="usecase_all" checked>
+          </td>
+          <td>All</td>
+          <td>
+            <b>대상에 관한 가능한 모든 정보를 획득하고 분석합니다.</b><br><br>
+            모든 SpiderFoot 모듈을 활성화하여(처리 시간이 길어질 수 있음) 타깃과 관련된 모든 데이터 포인트를 탐색합니다.
+          </td>
+        </tr>
+        <tr>
+          <td><input class="form-check-input" type="radio" name="usecase" value="Footprint" id="usecase_footprint"></td>
+          <td>Footprint</td>
+          <td>
+            <b>대상이 인터넷에 노출한 정보를 종합적으로 분석합니다.</b><br><br>
+            광범위한 웹 크롤링과 검색엔진 조사를 통해 네트워크 페리미터, 연관된 신원 정보 및 기타 관련 데이터 포인트를 탐색·분석합니다.
+          </td>
+        </tr>
+        <tr>
+          <td><input class="form-check-input" type="radio" name="usecase" value="Investigate" id="usecase_investigate"></td>
+          <td>Investigate</td>
+          <td>
+            <b>대상이 악의적일 가능성이 의심될 경우 권장되는 옵션입니다.</b><br><br>
+            블랙리스트 확인 및 기타 신뢰할 수 있는 출처 조회를 통해 대상의 악성 여부를 판단하는 데 도움이 되는 정보를 수집·분석합니다.
+          </td>
+        </tr>
+        <tr>
+          <td><input class="form-check-input" type="radio" name="usecase" value="Passive" id="usecase_passive"></td>
+          <td>Passive</td>
+          <td>
+            <b>대상이 조사되고 있다는 사실이 노출되면 안 되는 경우에 권장합니다.</b><br><br>
+            패시브 기법만으로 정보를 수집·분석합니다.
+          </td>
+        </tr>
+      </table>
+
+      <!-- Module Table -->
+      <table class="table table-striped table-sm" id="moduletable" style="display: none">
+        {% set modlist = {} %}
+        {% for item, data in modules.items() %}
+          {% set _ = modlist.update({ data['name']: item }) %}
+        {% endfor %}
+        {% for it in modlist.keys()|sort(case_sensitive=False) %}
+          {% set item = modlist[it] %}
+          {% set keylist = modules[item]['opts'] | dictsort if modules[item]['opts'] %}
+          {% set keyicon = "" %}
+          {% if keylist | length > 0 %}
+            {% set keylist = {} %}
+            {% for k, v in modules[item]['opts'].items() %}
+              {% if not k.startswith('_') %}
+                {% set _ = keylist.update({k:v}) %}
+              {% endif %}
+            {% endfor %}
+            {% if apikeylist | length > 0 %}
+                {% set keyicon = "&nbsp;&nbsp;<i class='bi bi-lock' data-bs-toggle='tooltip' title='Needs API key'></i>" %}
+            {% endif %}
+          {% endif %}
+          {% if item != "sfp__stor_db" and item != "sfp__stor_stdout" %}
+            <tr>
+              <td><input class="form-check-input" type="checkbox" id="module_{{ item }}" checked></td>
+              <td>{{ modules[item]['name'] | safe }}{{ keyicon | safe }}</td>
+              <td>{{ modules[item]['descr'] }}</td>
+            </tr>
+          {% endif %}
+        {% endfor %}
+      </table>
+
+      <!-- Type Table -->
+      <table class="table table-striped table-sm" id="typetable" style="display: none">
+        {% set count = 0 %}
+        {% for item in types | sort %}
+          {% if count % 2 == 0 %}
+            <tr>
+          {% endif %}
+          <td><input class="form-check-input" type="checkbox" id="type_{{ item[1] }}" checked></td>
+          <td>{{ item[0] }}</td>
+          {% if not (count % 2 == 0) %}
+            </tr>
+          {% endif %}
+          {% set count = count + 1 %}
+        {% endfor %}
+      </table>
+    </div>
+
+    <!-- Submit -->
+    <div class="mt-3">
+      <input type="hidden" id="modulelist" name="modulelist" value="">
+      <input type="hidden" id="typelist" name="typelist" value="">
+      <button id="btn-run-scan" class="btn btn-danger">Run Scan Now</button>
+    </div>
+  </form>
+</div>
+
+<script type="text/javascript">
+  if ("{{ selectedmods }}" != "") {
+    switchTab("module");
+
+    $("input[id^=module_]").each(function(id, obj) {
+      if ("{{ selectedmods }}".indexOf(obj.id.replace("module_", "")) >= 0) {
+        $("#" + obj.id).attr("checked", true);
+      } else {
+        $("#" + obj.id).attr("checked", false);
+      }
+    });
+  }
+</script>
+
+{% endblock %}

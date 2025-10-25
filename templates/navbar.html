@@ -1,0 +1,51 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+    <div class="container-fluid">
+        <a class="navbar-brand brand-logo light" href="/">
+        <img class="spiderfoot-header-image" src="static/img/spiderfoot-header.png" />
+        </a>
+        <a class="navbar-brand brand-logo dark" href="/">
+        <img class="spiderfoot-header-image" src="static/img/spiderfoot-header-dark.png" />
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-navbar-collapse" aria-controls="main-navbar-collapse" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="main-navbar-collapse">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item {% if pageid == 'NEWSCAN' %}active{% endif %}">
+            <a class="nav-link" id="nav-link-newscan" href="newscan">
+                <i class="bi bi-camera-reels"></i>&nbsp;New Scan
+            </a>
+            </li>
+            <li class="nav-item {% if pageid == 'SCANLIST' %}active{% endif %}">
+            <a class="nav-link" id="nav-link-scans" href="scanlist">
+                <i class="bi bi-list"></i>&nbsp;Scans
+            </a>
+            </li>
+            <li class="nav-item {% if pageid == 'SETTINGS' %}active{% endif %}">
+            <a class="nav-link" id="nav-link-settings" href="opts">
+                <i class="bi bi-gear"></i>&nbsp;Settings
+            </a>
+            </li>
+        </ul>
+
+        <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+            <li class="nav-item d-flex align-items-center">
+                <!-- 텍스트 span -->
+                <span id="toggler-text" class="me-2 lh-1">Dark Mode</span>
+              
+                <!-- 스위치 label -->
+                <label id="switcher4" class="form-check form-switch mb-0 d-flex align-items-center">
+                  <input id="theme-toggler" class="form-check-input p-0" type="checkbox">
+                  <span class="visually-hidden">Toggle</span>
+                </label>
+            </li>
+            <a class="nav-link" href="#aboutmodal" data-bs-toggle="modal" data-bs-target="#aboutmodal">
+                <i class="bi bi-info-circle"></i>&nbsp;About
+            </a>
+            </li>
+        </ul>
+        </div>
+    </div>
+</nav>

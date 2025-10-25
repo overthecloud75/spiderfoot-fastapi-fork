@@ -1,0 +1,38 @@
+<div id="optsect_global" class="tab-pane fade show active" role="tabpanel" aria-labelledby="tab_global">
+    <h4 class="mb-3">Global Settings</h4>
+    <div class="table-responsive">
+        <table class="table table-bordered align-middle">
+            <thead class="table-light">
+            <tr>
+                <th scope="col" style="width: 40%">Option</th>
+                <th scope="col">Value</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for opt in opts.keys() | sort %}
+                {% if not opt.startswith("__") %}
+                <tr>
+                    <td>{{ opts['__globaloptdescs__'].get(opt, "No description available") }}</td>
+                    <td>
+                        {% if opts[opt] is number %}
+                        <input id='{{ opt }}' class='form-control' type="text" value="{{ opts[opt] }}">
+                        {% elif opts[opt] is string %}
+                        <input id='{{ opt }}' class='form-control' type="text" style="max-width: 500px;" value="{{ opts[opt] }}">
+                        {% elif opts[opt] is boolean %}
+                        <select id='{{ opt }}' class='form-select'>
+                            <option value="1" {% if opts[opt] %}selected{% endif %}>True</option>
+                            <option value="0" {% if not opts[opt] %}selected{% endif %}>False</option>
+                        </select>
+                        {% elif opts[opt] is sequence and opts[opt][0] is string %}
+                        <input id='{{ opt }}' class='form-control' type="text" style="max-width: 500px;" value="{{ opts[opt] | join(',') }}">
+                        {% elif opts[opt] is sequence and opts[opt][0] is number %}
+                        <input id='{{ opt }}' class='form-control' type="text" value="{{ opts[opt] | join(',') }}">
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endif %}
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

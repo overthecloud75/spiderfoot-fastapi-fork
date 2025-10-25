@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "d3": "^3.5.17",
+    "sigma": "^1.2.1",
+    "tablesorter": "^2.31.3"
+  }
+}

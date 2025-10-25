@@ -1,0 +1,23 @@
+id: outlier_webserver
+version: 1
+meta:
+  name: Outlier web server
+  description: >
+    발견된 전체 웹 서버 중 10% 이하에만 나타난 웹 서버입니다.
+    이처럼 특이값(Outlier)은 드물게 나타나는 경우가 많아, 
+    관심 있는 대상일 가능성이 있습니다.
+
+    특히 웹 서버의 경우, 이런 특이값은 **그림자 IT(Shadow IT)나 
+    관리되지 않는 인프라를 나타낼 수 있습니다.
+  risk: MEDIUM
+collections:
+  - collect:
+      - method: exact
+        field: type
+        value: WEBSERVER_BANNER
+aggregation:
+  field: data
+analysis:
+  - method: outlier
+    maximum_percent: 10
+headline: "Outlier web server found: {data}"

@@ -1,0 +1,37 @@
+id: host_only_from_certificatetransparency
+version: 1
+meta:
+  name: Hostname only from certificate transparency
+  description: >
+    해당 호스트 이름이 Certificate Transparency(인증서 투명성)에서는 발견되었지만, 
+    다른 곳에서는 확인되지 않았습니다.
+    
+    다른 곳에서 발견되지 않았다는 점은 이 호스트가 일반적으로 공개되거나 사용될 의도가 없는, 
+    특별한 용도의 시스템일 가능성을 시사합니다.
+  risk: LOW
+collections:
+  - collect:
+      - method: exact
+        field: type
+        value: INTERNET_NAME
+      - method: exact
+        field: module
+        value:
+          - sfp_crt
+          - sfp_certspotter
+  - collect:
+      - method: exact
+        field: type
+        value: INTERNET_NAME
+      - method: exact
+        field: module
+        value:
+          - not sfp_crt
+          - not sfp_certspotter
+          - not sfp_dnsresolve
+aggregation:
+  field: data
+analysis:
+  - method: first_collection_only
+    field: data
+headline: "Host found only in certificate transparency: {data}"

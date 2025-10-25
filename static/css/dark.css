@@ -1,0 +1,384 @@
+/* ===== DARK THEME (Bootstrap 5) ===== */
+body {
+  background-color: #1b1b1b;
+  color: #fff;
+}
+
+/* 버튼 스타일 */
+body button,
+.btn {
+  background-color: #059cd7;
+  border: none;
+  color: #fff;
+}
+
+body button:hover,
+.btn:hover,
+.dropdown-item:hover {
+  background-color: #037eaf;
+  color: #fff;
+}
+
+/* 네비게이션 바 스타일 */
+.navbar {
+  background-color: #171717 !important;
+  border-bottom: 1px solid #373737;
+}
+
+.navbar .navbar-brand,
+.navbar .nav-link {
+  color: #fff !important;
+}
+
+.navbar .nav-link:hover {
+  color: #059cd7 !important;
+}
+
+/* 드롭다운 메뉴 */
+.dropdown-menu {
+  background-color: #171717;
+  border: 1px solid #373737;
+}
+
+.dropdown-item {
+  color: #fff;
+}
+
+.dropdown-item:hover {
+  background-color: #037eaf;
+  color: #fff;
+}
+
+/* 인풋 필드 */
+body input,
+body .form-control {
+  background-color: #3a3a3a;
+  border: 1px solid #828181;
+  color: #fff;
+}
+
+body input:focus,
+body .form-control:focus {
+  background-color: #3a3a3a;
+  border-color: #059cd7;
+  box-shadow: 0 0 0 0.2rem rgba(5, 156, 215, 0.25);
+  color: #fff;
+}
+
+/* 카드 (Bootstrap 5에서 panel 대신 card 사용) */
+body .card {
+  background-color: #3a3a3a !important;
+  border: 1px solid #828181 !important;
+  color: #fff;
+}
+
+/* 테이블 */
+table tr {
+  background-color: #3a3a3a !important;
+}
+
+table tr:nth-child(even) {
+  background-color: #555 !important;
+}
+
+table th,
+table td {
+  color: #fff;
+  border-color: #828181 !important;
+}
+
+/* 링크 색상 */
+a {
+  color: #059cd7;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #037eaf;
+  text-decoration: underline;
+}
+
+/* 토글러 텍스트 */
+#toggler-text {
+  color: #fff;
+}
+
+/* ===== ACTIVE LINK ===== */
+.nav-item.active > .nav-link,
+.nav-link.active {
+  background-color: #3a3a3a !important;
+  color: #fff !important;
+}
+
+/* ===== ALERTS ===== */
+.alert-info {
+  border: 1px solid #828181;
+  background-color: #3a3a3a;
+  color: #fff;
+}
+
+/* ===== BUTTONS ===== */
+#btn-save-changes {
+  background-color: #337ab7 !important;
+  border-color: #2e6da4 !important;
+  color: #fff !important;
+}
+
+#btn-save-changes:hover {
+  background-color: #265b8a !important;
+}
+
+#btn-reset-settings {
+  background-color: #c9302c !important;
+  border-color: #ac2925 !important;
+  color: #fff !important;
+}
+
+#btn-reset-settings:hover {
+  background-color: #ac2b26 !important;
+}
+
+/* 공통 버튼 스타일 */
+.btn,
+#btn-filter,
+#btn-rerun,
+#btn-stop,
+#btn-refresh,
+#btn-export {
+  background-color: #059cd7 !important;
+  color: #fff !important;
+  border-color: #0a81b0;
+}
+
+.btn-group > .btn + .dropdown-toggle {
+  background-color: #059cd7 !important;
+  color: #fff !important;
+  border-color: #0a81b0;
+  border-left: 1px solid #e7e7e7;
+}
+
+/* ===== FORM CONTROL ===== */
+.form-control {
+  background-color: #3a3a3a;
+  border: 1px solid #828181;
+  color: #fff !important;
+}
+
+.form-control:focus {
+  background-color: #3a3a3a;
+  border-color: #059cd7;
+  box-shadow: 0 0 0 0.2rem rgba(5, 156, 215, 0.25);
+  color: #fff;
+}
+
+/* ===== THEME TOGGLE ===== */
+.dark {
+  display: inline;
+}
+
+.light {
+  display: none;
+}
+
+/* ===== MODAL ===== */
+.fade.show {
+  background: #1b1b1b !important;
+}
+
+.modal-content {
+  background-color: #3a3a3a;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+  color: #fff;
+}
+
+/* ===== ALERT & BREADCRUMBS ===== */
+#scanlist .alert-info {
+  background-color: #282828;
+}
+
+#breadcrumbs {
+  background-color: #3a3a3a;
+}
+
+/* ===== TABLE ===== */
+.table-border-bg-inherit {
+  color: #fff;
+}
+
+tr.danger {
+  color: #000;
+}
+
+/* ===== SVG AXIS ===== */
+svg text {
+  fill: #fff;
+}
+
+.axis path,
+.axis line {
+  stroke: #fff;
+}
+
+/* ===== STATUS COUNTERS ===== */
+#errors, #status, #ucounter, #tcounter {
+  opacity: 0.9;
+}
+
+/* ===== DROPDOWN MENU (Bootstrap 5) ===== */
+.dropdown-menu {
+  background-color: #555;
+}
+
+.dropdown-menu .dropdown-item {
+  color: #fff !important;
+}
+
+.dropdown-menu .dropdown-item:hover {
+  background-color: #037eaf;
+  color: #fff;
+}
+
+/* ===== NAV TABS (Bootstrap 5) ===== */
+.nav-tabs {
+  border-bottom: none;
+}
+
+.nav-tabs .nav-link {
+  color: #fff;
+  background-color: #3a3a3a;
+  border: none;
+}
+
+.nav-tabs .nav-link.active {
+  background-color: #555;
+  color: #fff;
+}
+
+/* ===== POPOVER (Bootstrap 5) ===== */
+.popover-header {
+  background-color: #555;
+  color: #fff;
+}
+
+.popover-body {
+  background-color: #3a3a3a;
+  color: #fff;
+}
+
+/* =========================
+   Modal (Alertify → Bootstrap 5 스타일)
+   ========================= */
+   .modal-backdrop.show {
+    background-color: #000 !important;
+    opacity: 0.75 !important;
+  }
+  
+  .modal-content,
+  .modal-header,
+  .modal-body,
+  .modal-footer {
+    background-color: #3a3a3a !important;
+    color: #fff;
+    border: none;
+  }
+  
+  .modal-header .btn-close {
+    filter: invert(1); /* 닫기 버튼 흰색 */
+  }
+  
+  /* =========================
+     Tablesorter (다크 테마 적용)
+     ========================= */
+  .tablesorter-default {
+    width: 100%;
+    font: 12px/18px Arial, sans-serif;
+    border-spacing: 0;
+    margin: 10px 0 15px;
+    text-align: left;
+    background-color: #3a3a3a;
+    color: #fff;
+  }
+  
+  .tablesorter-default th,
+  .tablesorter-default thead td {
+    font-weight: 700;
+    border-bottom: 2px solid #ccc;
+    padding: 4px 20px 4px 4px;
+    cursor: pointer;
+  }
+  
+  .tablesorter-default th {
+    background-color: #2d2d2d;
+  }
+  
+  .tablesorter-default td {
+    border-bottom: 1px solid #828181;
+    padding: 4px;
+    vertical-align: top;
+  }
+  
+  /* 정렬 아이콘 (Up / Down) */
+  .tablesorter-default thead .tablesorter-headerAsc {
+    background-color: #444;
+    border-bottom: 2px solid #059cd7;
+  }
+  
+  .tablesorter-default thead .tablesorter-headerDesc {
+    background-color: #444;
+    border-bottom: 2px solid #059cd7;
+  }
+  
+  /* 짝수/홀수 라인 색상 */
+  .tablesorter-default tr:nth-child(even) td {
+    background-color: #444;
+  }
+  
+  .tablesorter-default tr:nth-child(odd) td {
+    background-color: #3a3a3a;
+  }
+  
+  /* hover */
+  .tablesorter-default tbody > tr:hover > td {
+    background-color: #555;
+  }
+  
+  /* 필터 입력 */
+  .tablesorter-default input.tablesorter-filter,
+  .tablesorter-default select.tablesorter-filter {
+    width: 95%;
+    height: auto;
+    margin: 4px auto;
+    padding: 4px;
+    background-color: #2d2d2d;
+    border: 1px solid #bbb;
+    color: #fff;
+    box-sizing: border-box;
+    transition: height 0.1s ease;
+  }
+  
+  .tablesorter-default input.tablesorter-filter:focus {
+    border-color: #059cd7;
+    outline: none;
+    box-shadow: 0 0 0 0.2rem rgba(5, 156, 215, 0.25);
+  }
+  
+  /* 비활성 필터 */
+  .tablesorter-default .tablesorter-filter-row .disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  /* 정렬 로딩 표시 (Spinner) */
+  .tablesorter-default .tablesorter-processing {
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    background-image: url("data:image/gif;base64,R0lGODlhFAAUAKEAAO7u7lpaWgAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQBCgACACwAAAAAFAAUAAACQZRvoIDtu1wLQUAlqKTVxqwhXIiBnDg6Y4eyx4lKW5XK7wrLeK3vbq8J2W4T4e1nMhpWrZCTt3xKZ8kgsggdJmUFACH5BAEKAAIALAcAAAALAAcAAAIUVB6ii7jajgCAuUmtovxtXnmdUAAAIfkEAQoAAgAsDQACAAcACwAAAhRUIpmHy/3gUVQAQO9NetuugCFWAAAh+QQBCgACACwNAAcABwALAAACE5QVcZjKbVo6ck2AF95m5/6BSwEAIfkEAQoAAgAsBwANAAsABwAAAhOUH3kr6QaAcSrGWe1VQl+mMUIBACH5BAEKAAIALAIADQALAAcAAAIUlICmh7ncTAgqijkruDiv7n2YUAAAIfkEAQoAAgAsAAAHAAcACwAAAhQUIGmHyedehIoqFXLKfPOAaZdWAAAh+QQFCgACACwAAAIABwALAAACFJQFcJiXb15zLYRl7cla8OtlGGgUADs=") !important;
+  }
+  
+  /* 에러 행 */
+  .tablesorter .tablesorter-errorRow td {
+    text-align: center;
+    cursor: pointer;
+    background-color: #e6bf99;
+    color: #000;
+  }

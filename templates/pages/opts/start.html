@@ -1,0 +1,10 @@
+<div class="text-start mb-4">
+    <input type="hidden" id="allopts" name="allopts" value="">
+    <input type="hidden" id="token" name="token" value="{{ token }}">
+    <input type="file" name="configFile" id="configFile" class="d-none" onChange="$('#savesettingsform').submit()" />
+
+    <button id="btn-save-changes" class="btn btn-primary me-2" type="submit">Save Changes</button>
+    <button id="btn-import-config" class="btn btn-info me-2" type="button">Import API Keys</button>
+    <button id="btn-opt-export" class="btn btn-info me-2" type="button">Export API Keys</button>
+    <button id="btn-reset-settings" class="btn btn-danger" type="button">Reset to Factory Default</button>
+</div>

@@ -1,0 +1,83 @@
+{% for mod in opts['__modules__'] | dictsort %}
+    {% set moddata = opts['__modules__'][mod[0]] %}
+    {% set summary = moddata.get('descr', 'No summary available.') %}
+    {% set categories = moddata.get('cats', []) %}
+    {% set labels = moddata.get('labels', []) %}
+    {% set meta = moddata.get('meta', {}) %}
+    {% set modopts = moddata.get('opts', {}) %}
+    {% set optdescs = moddata.get('optdescs', {}) %}
+    {% set data_source = meta.get('dataSource', {}) %}
+    {% set website = data_source.get('website', '') %}
+    {% set description = data_source.get('description', '') %}
+    {% set apiKeyInstructions = data_source.get('apiKeyInstructions', []) %}
+        
+    <div id='optsect_{{ mod[0] }}' class="tab-pane" style="display: none">
+        <h4>{{ moddata['name'] }} ({{ mod[0] }})</h4>
+        
+        <table class='table table-bordered table-striped'>
+            <tbody>
+                <tr><td>Summary</td><td>{{ summary }}<br/><br/>{{ description }}</td></tr>
+                
+                {% if categories %}
+                <tr><td>Categories:</td><td>{{ categories | join(', ') }}</td><tr>
+                {% endif %}
+                
+                {% if labels %}
+                <tr><td>Tags:</td><td>{{ labels | join(', ') }}</td><tr>
+                {% endif %}
+                
+                {% if website %}
+                <tr><td>Website:</td><td><a href="{{ website }}" target=_new>{{ website }}</a></td></tr>
+                {% endif %}
+            </tbody>
+        </table>
+        
+        <h4>Settings</h4>
+        <table class='table table-bordered table-striped'>
+            <thead><tr><th>Option</th> <th>Value</th></tr></thead>
+            <tbody>
+            
+                {% for opt in modopts.keys() | sort %}
+                {% if not opt.startswith("_") %}
+                <tr>
+                    <td>{{ optdescs.get(opt, "No description available.") }}
+                        {% if "api_key" in opt and apiKeyInstructions %}
+                            {% set instructions = "" %}
+                            {% for step in apiKeyInstructions %}
+                                {% set step_safe = step | replace("https://", "<a target=_new href='"+step+"'>"+step+"</a>") %}
+                                {% set instructions = instructions + "<li>" + step_safe + "</li>" %}
+                            {% endfor %}
+                            &nbsp;&nbsp;<a href='#' data-html="true" data-toggle="popover" data-trigger="focus" title="Instructions" data-content="<ol>{{ instructions|safe }}</ol>"><i class="glyphicon glyphicon-question-sign"></i></a>
+                        {% endif %}
+                    </td>
+                    <td style='vertical-align: middle'>
+                        {% if modopts[opt] is number %}
+                        <div class='form-group'>
+                            <input id='{{ mod[0] }}:{{ opt }}' class='form-control' type=text value="{{ modopts[opt] }}">
+                        </div>
+                        {% elif modopts[opt] is string %}
+                        <div class='form-group'>
+                            <input id='{{ mod[0] }}:{{ opt }}' style='width: 500px' class='form-control' type=text value="{{ modopts[opt] }}">
+                        </div>
+                        {% elif modopts[opt] is boolean %}
+                        <select id='{{ mod[0] }}:{{ opt }}' class='form-control'>
+                            <option value=1 {% if modopts[opt] %}selected{% endif %}>True</option>
+                            <option value=0 {% if not modopts[opt] %}selected{% endif %}>False</option>
+                        </select>
+                        {% elif modopts[opt] is sequence and modopts[opt][0] is string %}
+                        <div class='form-group'>
+                            <input id='{{ mod[0] }}:{{ opt }}' style='width: 500px' class='form-control' type=text value="{{ modopts[opt] | join(',') }}">
+                        </div>
+                        {% elif modopts[opt] is sequence and modopts[opt][0] is number %}
+                        <div class='form-group'>
+                            <input id='{{ mod[0] }}:{{ opt }}' class='form-control' type=text value="{{ modopts[opt] | join(',') }}">
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endfor %}

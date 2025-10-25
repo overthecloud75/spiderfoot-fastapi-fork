@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<script type='text/javascript' src='static/js/spiderfoot.opts.js'></script>
+<h2>Settings</h2>
+
+{% include "pages/opts/updated.html" %}
+
+<form class="form" action="api/savesettings" id="savesettingsform" method="POST" enctype="multipart/form-data">
+    {% include "pages/opts/start.html" %}
+
+    <div class="row">
+    <!-- 왼쪽 사이드 탭 -->
+        {% include "pages/opts/left_tap.html" %}
+        <!-- 오른쪽 탭 컨텐츠 -->
+        <div class="col-md-9">
+            <div class="tab-content" id="settingsTabsContent">
+                {% include "pages/opts/global_settings.html" %}
+                {% include "pages/opts/module.html" %}
+            </div>
+        </div>
+    </div>
+</form>
+<br><br>
+
+{% endblock %}

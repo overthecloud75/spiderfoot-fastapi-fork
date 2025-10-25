@@ -1,0 +1,8 @@
+<footer class="navbar navbar-light bg-light fixed-bottom">
+    <div class="container-fluid d-flex justify-content-center align-items-center py-2">
+      {% set messages = [
+          "<i class='bi bi-lightning-fill me-2'></i><a href='#' rel='noopener'>ASM(Attack Surface Monitoring)을 체험해보세요.</a>"
+      ] %}
+      <span>{{ messages | random | safe }}</span>
+    </div>
+</footer>

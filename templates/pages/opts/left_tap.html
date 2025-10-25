@@ -1,0 +1,37 @@
+ <!-- 왼쪽 사이드 탭 -->
+<div class="col-md-3">
+    <ul class="nav nav-pills flex-column" id="settingsTabs" role="tablist">
+        <li class="nav-item mb-1" role="presentation">
+            <button class="nav-link active w-100 text-start" id="tab_global"
+                data-bs-toggle="pill" data-bs-target="#optsect_global" type="button" role="tab"
+                aria-controls="optsect_global" aria-selected="true">
+                Global
+            </button>
+        </li>
+
+        {% for mod in opts['__modules__'] | dictsort %}
+            {% set keylist = {} %}
+            {% for k, v in opts['__modules__'][mod[0]]['opts'].items() if not k.startswith('_') %}
+                {% set _ = keylist.update({k:v}) %}
+            {% endfor %}
+            {% if keylist %}
+                {% set keyicon = "" %}
+                {% set apikeylist = {} %}
+                {% for k, v in opts['__modules__'][mod[0]]['opts'].items() if "api_key" in k %}
+                    {% set _ = apikeylist.update({k:v}) %}
+                {% endfor %}
+                {% if apikeylist %}
+                    {% set keyicon = "&nbsp;&nbsp;<i class='bi bi-lock-fill'></i>" %}
+                {% endif %}
+                <li class="nav-item mb-1" role="presentation">
+                    <button class="nav-link w-100 text-start" id="tab_{{ mod[0] }}"
+                            data-bs-toggle="pill" data-bs-target="#optsect_{{ mod[0] }}" type="button" role="tab"
+                            aria-controls="optsect_{{ mod[0] }}" aria-selected="false"
+                            onclick='switchTab("{{ mod[0] }}");'>
+                    {{ opts['__modules__'][mod[0]]['name'] }}{{ keyicon|safe }}
+                    </button>
+                </li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+</div>

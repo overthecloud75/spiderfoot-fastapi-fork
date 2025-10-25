@@ -1,0 +1,99 @@
+<div class="btn-toolbar mb-2" role="toolbar">
+    <!-- 좌측 버튼 그룹 -->
+    <div class="btn-group me-2" role="group">
+        <a id="btn-status" class="btn btn-outline-secondary" onClick='scanSummaryView("{{ id }}")'>
+            <i class="bi bi-eye"></i>&nbsp;Summary
+        </a>
+        <a id="btn-correlations" class="btn btn-outline-secondary" onClick='browseCorrelations("{{ id }}")'>
+            <i class="bi bi-exclamation-triangle"></i>&nbsp;Correlations
+        </a>
+        <a id="btn-browse" class="btn btn-outline-secondary" onClick='browseEventList("{{ id }}")'>
+            <i class="bi bi-list"></i>&nbsp;Browse
+        </a>
+        <a id="btn-graph" class="btn btn-outline-secondary" onClick='graphEvents("{{ id }}")'>
+            <i class="bi bi-diagram-3"></i>&nbsp;Graph
+        </a>
+        <a id="btn-info" class="btn btn-outline-secondary" onClick='viewScanConfig("{{ id }}")'>
+            <i class="bi bi-gear"></i>&nbsp;Scan Settings
+        </a>
+        <a id="btn-log" class="btn btn-outline-secondary" onClick='viewScanLog("{{ id }}")'>
+            <i class="bi bi-book"></i>&nbsp;Log
+        </a>
+    </div>
+
+    <!-- 검색 박스 -->
+    <div class="input-group float-end ms-auto me-2" id="btn-search">
+        <input
+            class="form-control"
+            id="searchvalue"
+            type="text"
+            placeholder="Search..."
+            data-bs-toggle="popover"
+            data-bs-trigger="focus"
+            data-bs-html="true"
+            data-bs-animation="true"
+            data-bs-title="Usage"
+            data-bs-content="Supply a regular expression encapsulated in '/', e.g. <i>/searchregex/</i> or a simple wildcard search, e.g. <i>*string*</i> or an exact value, e.g. <i>string</i>.<br /><br /><b>Note</b> that the current scope is what's searched."
+        >
+        <button class="btn btn-primary" id="searchbutton" type="button">
+            <i class="bi bi-search"></i>
+        </button>
+    </div>
+
+    <!-- 우측 툴버튼 -->
+    <div class="btn-group float-end me-2" role="group">
+        <button id="btn-refresh" title="Refresh" class="btn btn-success" onClick="refresh()">
+            <i class="bi bi-arrow-repeat"></i>
+        </button>
+        <button id="btn-download-logs" title="Download Scan Logs" class="btn btn-outline-secondary" onClick='downloadLogs("{{ id }}")'>
+            <i class="bi bi-download"></i>
+        </button>
+        <div class="btn-group" role="group">
+            <button id="btn-export" title="Export Data" class="btn btn-outline-secondary" data-bs-toggle="dropdown">
+                <i class="bi bi-download"></i>
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" onClick='exportEventData("{{ id }}", currentType, "csv")'>CSV</a></li>
+                <li><a class="dropdown-item" onClick='exportEventData("{{ id }}", currentType, "excel")'>Excel</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 뷰 토글 버튼 -->
+    <div id="customtabview" class="btn-group float-end me-2" role="group">
+        <a id="btn-fullview" title="Full Data View" class="btn btn-outline-secondary active" onClick='browseUpdate("full")'>
+            <i class="bi bi-grid"></i>
+        </a>
+        <a id="btn-uniqueview" title="Unique Data View" class="btn btn-outline-secondary" onClick='browseUpdate("unique")'>
+            <i class="bi bi-justify"></i>
+        </a>
+        <button id="btn-vizview" title="Visualize" class="btn btn-outline-secondary" data-bs-toggle="dropdown">
+            <i class="bi bi-image"></i>
+        </button>
+        <ul class="dropdown-menu">
+            <li><a class="dropdown-item" onClick='browseUpdate("viz-bubble-data")'>Bubble (Data Element)</a></li>
+            <li><a class="dropdown-item" onClick='browseUpdate("viz-bubble-source")'>Bubble (Source Data Element)</a></li>
+            <li><a class="dropdown-item" onClick='browseUpdate("viz-dendro")'>Discovery Path</a></li>
+        </ul>
+    </div>
+
+    <!-- Viz view -->
+    <div id="customvizview" class="btn-group float-end me-2" role="group">
+        <a id="btn-random" title="Random Layout" class="btn btn-outline-secondary active" onClick='vizUpdate("random")'><b>R</b></a>
+        <a id="btn-forceatlas" title="Force Layout" class="btn btn-outline-secondary" onClick='vizUpdate("force")'><b>F</b></a>
+        <a id="btn-saveimage" title="Save Image" class="btn btn-outline-secondary" onClick='vizUpdate("download")'>
+            <i class="bi bi-image"></i>
+        </a>
+    </div>
+
+    <!-- False Positive -->
+    <div id="modifyactions" class="btn-group float-end" role="group">
+        <button id="btn-setfp" title="Set/Unset False Positive flag" class="btn btn-warning" data-bs-toggle="dropdown">
+            <i class="bi bi-slash-circle"></i>
+        </button>
+        <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="#" onClick='setFp(1)'>Set False Positive flag</a></li>
+        <li><a class="dropdown-item" href="#" onClick='setFp(0)'>Unset False Positive flag</a></li>
+        </ul>
+    </div>
+</div>

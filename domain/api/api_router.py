@@ -286,7 +286,6 @@ async def scanopts(
             try:
                 modName, modOpt = key.split(':', 1)
             except ValueError:
-                # Handle malformed key if necessary, or just skip it
                 continue
 
             module_info = modules.get(modName)
@@ -555,15 +554,16 @@ async def search(
 
 @router.post("/scaneventresults")
 async def scaneventresults(
-    id: str = Form(..., description="스캔 고유 ID"),
-    eventType: str = Form(None),
-    filterfp: bool = Form(None),
-    correlationId: str = Form(None),
+    payload: ScanEventResutsRequest,
     dbh: SpiderFootDb = Depends(get_dbh)
 ):
     """
     Return all event results for a scan as JSON.
     """
+    id = payload.id
+    eventType = payload.eventType
+    filterfp = payload.filterfp
+    correlationId = payload.correlationId
     retdata = []
 
     if not eventType:
@@ -594,9 +594,7 @@ async def scaneventresults(
 
 @router.post("/scaneventresultsunique")
 async def scaneventresultsunique(
-    id: str = Form(...),
-    eventType: str = Form(...),
-    filterfp: bool = Form(False),
+    payload: ScanEventResultsUniqueRequest,
     dbh: SpiderFootDb = Depends(get_dbh)
 ) -> JSONResponse:
     """
@@ -610,6 +608,9 @@ async def scaneventresultsunique(
     Returns:
         JSONResponse: list of unique search results
     """
+    id = payload.id
+    eventType = payload.eventType
+    filterfp = payload.filterfp
     retdata = []
 
     try:
@@ -625,8 +626,7 @@ async def scaneventresultsunique(
 
 @router.post("/scanelementtypediscovery")
 async def scanelementtypediscovery(
-    id: str = Form(...),
-    eventType: str = Form(...),
+    payload: ScanElementTypeDiscoveryRequest,
     dbh: SpiderFootDb = Depends(get_dbh)
 ) -> JSONResponse:
     """
@@ -639,6 +639,8 @@ async def scanelementtypediscovery(
     Returns:
         dict: { "tree": ..., "data": ... }
     """
+    id = payload.id
+    eventType = payload.eventType
     pc = {}
     datamap = {}
     retdata = {}
@@ -658,9 +660,7 @@ async def scanelementtypediscovery(
 
 @router.post("/resultsetfp")
 async def resultsetfp(
-    id: str = Form(...), 
-    resultids: str = Form(...), 
-    fp: str = Form(...),
+    payload: ResultSetFpRequest,
     dbh: SpiderFootDb = Depends(get_dbh)
 ) -> JSONResponse:
     """
@@ -674,6 +674,9 @@ async def resultsetfp(
     Returns:
         JSONResponse: status and message
     """
+    id = payload.id
+    resultids = payload.resultids
+    fp = payload.fp
 
     if fp not in ["0", "1"]:
         return JSONResponse(content=["ERROR", "No FP flag set or not set correctly."], status_code=400)

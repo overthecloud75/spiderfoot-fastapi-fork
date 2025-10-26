@@ -37,7 +37,27 @@ class ScanLogRequest(BaseModel):
     id: str  
     limit: int = 0  
     rowId: str = None  
-    reverse: str = None  
+    reverse: str = None 
+
+class ScanEventResultsUniqueRequest(BaseModel):
+    id: str
+    eventType: str
+    filterfp: bool = False
+
+class ScanEventResutsRequest(BaseModel):
+    id: str
+    eventType: str = None
+    filterfp: bool = False
+    correlationId: str = None
+
+class ScanElementTypeDiscoveryRequest(BaseModel):
+    id: str
+    eventType: str
+
+class ResultSetFpRequest(BaseModel):
+    id: str
+    resultids: str
+    fp: str
 
 ScanErrorResponse = List[ScanError]
 

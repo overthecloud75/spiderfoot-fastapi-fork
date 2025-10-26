@@ -66,9 +66,8 @@
             alertify.error("You need to select at least one record.");
             return false;
         }
-        data = JSON.stringify(sel);
         $("#loader").show();
-        sf.fetchData('api/resultsetfp', {'id': '{{ id }}', 'fp': flag, 'resultids': data }, function(ret) {
+        sf.fetchData('api/resultsetfp', {'id': '{{ id }}', 'fp': flag, 'resultids': sel }, function(ret) {
             $("#loader").hide();
             if (ret[0] == "SUCCESS") {
                 refresh();

@@ -56,8 +56,8 @@ class ScanElementTypeDiscoveryRequest(BaseModel):
 
 class ResultSetFpRequest(BaseModel):
     id: str
-    resultids: str
-    fp: str
+    resultids: List
+    fp: int
 
 ScanErrorResponse = List[ScanError]
 

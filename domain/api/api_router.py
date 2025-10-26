@@ -4,7 +4,7 @@ import multiprocessing as mp
 import json
 
 from fastapi import APIRouter, File, UploadFile, Form, Depends, Request
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import RedirectResponse
 
 from sflib import SpiderFoot
 from sfscan import startSpiderFootScanner
@@ -96,7 +96,6 @@ async def scan_summary(
         scandata = dbh.scanResultSummary(id, by)
     except Exception as e:
         logger.error(e, exc_info=True)
-        # DB 연결 실패 또는 데이터 조회 실패 시 500 에러 대신 빈 리스트 반환 (원래 로직 유지)
         return retdata
 
     try:
@@ -104,7 +103,6 @@ async def scan_summary(
         statusdata = dbh.scanInstanceGet(id)
     except Exception as e:
         logger.error(e, exc_info=True)
-        # DB 연결 실패 또는 데이터 조회 실패 시 빈 리스트 반환 (원래 로직 유지)
         return retdata
 
     # 3. 데이터 처리 및 포맷 변경
@@ -521,11 +519,7 @@ def startscan(
     if dbh.scanInstanceGet(scanId) is None:
         return jsonify_error(500, "Scan failed to initialize within the timeout.") 
 
-    # JSON response for API clients
-    return JSONResponse(
-        content={"scanId": scanId},
-        status_code=200
-    )
+    return {"scanId": scanId}
 
 @router.post("/search")
 async def search(
@@ -546,11 +540,10 @@ async def search(
         list: search results
     """
     try:
-        results = searchBase(dbh, id, eventType, value)
-        return JSONResponse(content=results)
+        return searchBase(dbh, id, eventType, value)
     except Exception as e:
         logger.error(f"[-] search [{id}] failed: {e}", exc_info=True)
-        return JSONResponse(content=[], status_code=500)
+        return jsonify_error(500, []) 
 
 @router.post("/scaneventresults")
 async def scaneventresults(
@@ -572,7 +565,7 @@ async def scaneventresults(
     try:
         data = dbh.scanResultEvent(id, eventType, filterfp, correlationId=correlationId)
     except Exception:
-        return JSONResponse(content=retdata, status_code=500)
+        return jsonify_error(500, retdata)
 
     for row in data:
         lastseen = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(row[0]))
@@ -590,13 +583,13 @@ async def scaneventresults(
             row[4],
         ])
 
-    return JSONResponse(content=retdata)
+    return retdata
 
 @router.post("/scaneventresultsunique")
 async def scaneventresultsunique(
     payload: ScanEventResultsUniqueRequest,
     dbh: SpiderFootDb = Depends(get_dbh)
-) -> JSONResponse:
+):
     """
     Return unique event results for a scan as JSON.
 
@@ -604,9 +597,6 @@ async def scaneventresultsunique(
         id (str): filter search results by scan ID
         eventType (str): filter search results by event type
         filterfp (bool): remove false positives from search results
-
-    Returns:
-        JSONResponse: list of unique search results
     """
     id = payload.id
     eventType = payload.eventType
@@ -616,19 +606,19 @@ async def scaneventresultsunique(
     try:
         data = dbh.scanResultEventUnique(id, eventType, filterfp)
     except Exception:
-        return JSONResponse(content=retdata)
+        return retdata
 
     for row in data:
         escaped = html.escape(row[0])
         retdata.append([escaped, row[1], row[2]])
 
-    return JSONResponse(content=retdata)
+    return retdata
 
 @router.post("/scanelementtypediscovery")
 async def scanelementtypediscovery(
     payload: ScanElementTypeDiscoveryRequest,
     dbh: SpiderFootDb = Depends(get_dbh)
-) -> JSONResponse:
+):
     """
     Scan element type discovery.
 
@@ -649,75 +639,65 @@ async def scanelementtypediscovery(
         leafSet = dbh.scanResultEvent(id, eventType)
         datamap, pc = dbh.scanElementSourcesAll(id, leafSet)
     except Exception:
-        return JSONResponse(content=retdata)
+        return retdata
 
     # ROOT 제거
     pc.pop('ROOT', None)
     retdata['tree'] = SpiderFootHelpers.dataParentChildToTree(pc)
     retdata['data'] = datamap
 
-    return JSONResponse(content=retdata)
+    return retdata
 
 @router.post("/resultsetfp")
 async def resultsetfp(
     payload: ResultSetFpRequest,
     dbh: SpiderFootDb = Depends(get_dbh)
-) -> JSONResponse:
+):
     """
     Set a bunch of results (hashes) as false positive.
 
     Args:
         id (str): scan ID
-        resultids (str): JSON string of result IDs (list)
+        resultids: list
         fp (str): 0 or 1
-
-    Returns:
-        JSONResponse: status and message
     """
     id = payload.id
     resultids = payload.resultids
     fp = payload.fp
 
-    if fp not in ["0", "1"]:
-        return JSONResponse(content=["ERROR", "No FP flag set or not set correctly."], status_code=400)
+    if fp not in [0, 1]:
+        return jsonify_error(400, "No FP flag set or not set correctly.")
 
     try:
-        ids = json.loads(resultids)
-        if not isinstance(ids, list):
+        if not isinstance(resultids, list):
             raise ValueError("resultids must be a list")
     except Exception:
-        return JSONResponse(content=["ERROR", "No IDs supplied or invalid format."], status_code=400)
+        return jsonify_error(400, "No IDs supplied or invalid format.")
 
     # 스캔 상태 확인
     status = dbh.scanInstanceGet(id)
     if not status:
-        return JSONResponse(content=["ERROR", f"Invalid scan ID: {id}"], status_code=404)
+        return jsonify_error(400, f"ERROR. Invalid scan ID: {id}")
 
     if status[5] not in ["ABORTED", "FINISHED", "ERROR-FAILED"]:
-        return JSONResponse(content=[
-            "WARNING",
-            "Scan must be in a finished state when setting False Positives."
-        ])
+        return ["Warning", "Scan must be in a finished state when setting False Positives."]
 
     # 부모 FP 확인
-    if fp == "0":
-        data = dbh.scanElementSourcesDirect(id, ids)
+    if fp == 0:
+        data = dbh.scanElementSourcesDirect(id, resultids)
         for row in data:
             if str(row[14]) == "1":
-                return JSONResponse(content=[
-                    "WARNING",
-                    f"Cannot unset element {id} as False Positive if a parent element is still False Positive."
-                ])
+                return ["WARNING", f"Cannot unset element {id} as False Positive if a parent element is still False Positive."]
 
     # 자식도 함께 FP 설정
-    childs = dbh.scanElementChildrenAll(id, ids)
-    allIds = ids + childs
+    childs = dbh.scanElementChildrenAll(id, resultids)
+    allIds = resultids + childs
 
     ret = dbh.scanResultsUpdateFP(id, allIds, fp)
     if ret:
-        return JSONResponse(content=["SUCCESS", ""])
+        return ["SUCCESS", ""]
 
-    return JSONResponse(content=["ERROR", "Exception encountered."], status_code=500)
+    return jsonify_error(500, "Exception encountered.")
 
 @router.get("/scandelete")
 async def scandelete(
@@ -745,13 +725,11 @@ async def scandelete(
         res = dbh.scanInstanceGet(scan_id)
 
         if not res:
-            # Replaces self.jsonify_error('404', f"Scan {scan_id} does not exist")
             logger.error(f"Scan {scan_id} does not exist.", exc_info=True)
             return jsonify_error(404, f"Scan {scan_id} does not exist.")
 
         scan_status = res[5]
         if scan_status in ["RUNNING", "STARTING", "STARTED"]:
-            # Replaces self.jsonify_error('400', ...)
             return jsonify_error(400, f"Scan {scan_id} is {scan_status}. You cannot delete running scans.")
 
     # 3. Execution: Delete Scans

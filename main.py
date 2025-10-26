@@ -81,7 +81,7 @@ def start_web_server() -> None:
             "host": "0.0.0.0",
             "log_level": "info",
             "reload": False,
-            "access_log": False 
+            "access_log": False
         }
 
         # Uvicorn을 파이썬 API로 실행하면 로그/제어가 쉬움

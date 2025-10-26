@@ -9,7 +9,7 @@ import json
 
 from fastapi import APIRouter, File, UploadFile, Form, Depends, Request
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import JSONResponse, Response, StreamingResponse, RedirectResponse, HTMLResponse
+from fastapi.responses import Response, StreamingResponse, RedirectResponse, HTMLResponse
 
 from sflib import SpiderFoot
 from spiderfoot import SpiderFootDb, SpiderFootHelpers
@@ -79,7 +79,6 @@ async def scan_viz(
 
     # --- Case 1: Return JSON for Visualization (gexf == "0") ---
     if gexf == "0":
-        # Use JSONResponse as the content is generated JSON
         return json.loads(SpiderFootHelpers.buildGraphJson([root], data))
 
     # --- Case 2: Return GEXF file for download (gexf != "0") ---

@@ -90,7 +90,6 @@ function rerunSelected() {
         return;
     }
 
-    sf.log("Re-running scans: " + ids.join(','));
     sf.rerunScan(ids, reload);
 }
 
@@ -98,7 +97,6 @@ function exportSelected(type) {
     ids = getSelected();
 
     if (!ids) {
-        sf.log("Error: no scan(s) selected");
         return;
     }
 
@@ -106,23 +104,18 @@ function exportSelected(type) {
     var efr = document.getElementById('exportframe');
     switch(type) {
         case "gexf":
-            sf.log("Exporting scans as " + type + ": " + ids.join(','));
             efr.src = 'scanvizmulti?ids=' + ids.join(',');
             break;
         case "csv":
-            sf.log("Exporting scans as " + type + ": " + ids.join(','));
             efr.src = 'scaneventresultexportmulti?ids=' + ids.join(',');
             break;
         case "excel":
-            sf.log("Exporting scans as " + type + ": " + ids.join(','));
             efr.src = 'scaneventresultexportmulti?filetype=excel&ids=' + ids.join(',');
             break;
         case "json":
-            sf.log("Exporting scans as " + type + ": " + ids.join(','));
             efr.src = 'scanexportjsonmulti?ids=' + ids.join(',');
             break;
         default:
-            sf.log("Error: Invalid export type: " + type);
     }
     $("#loader").fadeOut(500);
 }

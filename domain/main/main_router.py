@@ -4,17 +4,15 @@ import json
 import random
 import time
 from io import StringIO
-from typing import Dict, Any, List, Optional, Generator
+from typing import Dict, Any, List, Generator
 import json
 
-# FastAPI 및 관련 라이브러리 import
-from fastapi import APIRouter, HTTPException, File, UploadFile, Form, Depends, Request
+from fastapi import APIRouter, File, UploadFile, Form, Depends, Request
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import JSONResponse, Response, StreamingResponse, RedirectResponse, HTMLResponse
 
-# 사용자 정의 라이브러리
-from spiderfoot import SpiderFootDb
-from spiderfoot import SpiderFootHelpers
+from sflib import SpiderFoot
+from spiderfoot import SpiderFootDb, SpiderFootHelpers
 from domain.state import state, get_dbh
 from .main_schema import *
 from .main_crud import *
@@ -68,13 +66,13 @@ async def scan_viz(
         Response: Either JSON data for visualization or a downloadable GEXF file.
     """
     if not id:
-        raise HTTPException(status_code=404, detail="Scan ID required")
+        return jsonify_error(404, "Scan ID required")
 
     data = dbh.scanResultEvent(id, filterFp=True)
     scan = dbh.scanInstanceGet(id)
 
     if not scan:
-        raise HTTPException(status_code=404, detail=f"Scan with ID '{id}' not found")
+        return jsonify_error(404, f"Scan with ID '{id}' not found")
 
     scan_name = scan[0]
     root = scan[1]
@@ -126,7 +124,7 @@ async def new_scan_page(
         types = dbh.eventTypes()
     except Exception as e:
         logger.error(f"Error fetching event types: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Failed to load scan data.")
+        return jsonify_error(500, "Failed to load scan data.")
 
     return templates.TemplateResponse(
         "pages/newscan/dashboard.html", 
@@ -157,8 +155,7 @@ async def scan_info(
     res = dbh.scanInstanceGet(id)
     
     if res is None:
-        # self.error("Scan ID not found.") 대신 HTTPException 사용
-        raise HTTPException(status_code=404, detail="Scan ID not found.")
+        return jsonify_error(404, "Scan ID not found.")
 
     # res[0] (scan name)은 HTML 템플릿에 안전하게 전달하기 위해 HTML escape 처리
     scan_name_escaped = html.escape(res[0])
@@ -182,7 +179,7 @@ async def scan_info(
 )
 async def opts(
     request: Request,
-    updated: Optional[str] = None, # 쿼리 파라미터로 받음
+    updated: str = None, 
 ) -> HTMLResponse:
     """
     전역 및 모듈 설정 페이지를 렌더링하고, 설정 업데이트 메시지를 표시합니다.
@@ -237,7 +234,7 @@ async def scaneventresultexport(
             excel_bytes = buildExcel(rows, headers, sheetNameIndex=1)
         except Exception as e:
             logger.error(f'build excel: {e}', exc_info=True)
-            raise HTTPException(status_code=500, detail=f"Failed to generate Excel file: {e}")
+            return jsonify_error(500, f"Failed to generate Excel file: {e}")
 
         # Return the binary data using Response
         return Response(
@@ -282,11 +279,7 @@ async def scaneventresultexport(
         )
 
     else:
-        # --- Invalid Filetype Error ---
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid export filetype: {filetype}. Must be 'csv' or 'xlsx'/'excel'."
-        )
+        return jsonify_error(400, f"Invalid export filetype: {filetype}. Must be 'csv' or 'xlsx'/'excel'.")
 
 @router.get(
     "/scaneventresultexportmulti"
@@ -318,8 +311,7 @@ async def scaneventresultexportmulti(
 
     # 2. Check if any data was retrieved
     if not data:
-        # Replaces returning None from original code
-        raise HTTPException(status_code=404, detail="No data found for the specified scan IDs or no valid IDs provided.")
+        return jsonify_error(400, "No data found for the specified scan IDs or no valid IDs provided.")
 
     # 3. Determine Filename
     filetype_lower = filetype.lower()
@@ -359,7 +351,7 @@ async def scaneventresultexportmulti(
             try:
                 parser = csv.writer(fileobj, dialect=dialect, escapechar='\\', quoting=csv.QUOTE_MINIMAL)
             except csv.Error as e:
-                raise HTTPException(status_code=400, detail=f"Invalid CSV dialect: {e}")
+                return jsonify_error(400, f"Invalid CSV dialect: {e}")
 
             # Write headers
             parser.writerow(headers)
@@ -382,26 +374,20 @@ async def scaneventresultexportmulti(
             }
         )
 
-    # --- Invalid Filetype Error ---
     else:
-        # Replaces self.error("Invalid export filetype.")
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid export filetype: {filetype}. Must be 'csv', 'xlsx', or 'excel'."
-        )
-
-
+        return jsonify_error(400, f"Invalid export filetype: {filetype}. Must be 'csv', 'xlsx', or 'excel'.")
+        
 @router.get(
     "/optsexport"
 )
 def optsexport(
-    pattern: Optional[str] = None,
+    pattern: str = None,
 ):
     """
     Export configuration settings in plain text (key=value) format.
 
     Args:
-        pattern: Optional pattern to filter configuration keys.
+        pattern: pattern to filter configuration keys.
 
     Returns:
         Response: Configuration settings as a text/plain file attachment.
@@ -453,15 +439,13 @@ async def scan_export_logs(
     Get scan log in CSV format.
     """
     try:
-        # 기존 dbh.scanLogs 호출 (SpiderFootDb 구현 필요)
         data = dbh.scanLogs(id, None, None, True)
     except Exception as e:
-        # CherryPy의 self.error 대신 HTTPException 또는 JSONResponse 사용
         logger.error(f'scan_export_logs: {e}', exc_info=True)
-        raise HTTPException(status_code=404, detail="Scan ID not found or error accessing logs.")
+        return jsonify_error(400, "Scan ID not found or error accessing logs.")
 
     if not data:
-        raise HTTPException(status_code=404, detail="Scan ID not found or logs are empty.")
+        return jsonify_error(404, "Scan ID not found or logs are empty.")
     
     fileobj = StringIO()
     parser = csv.writer(fileobj, dialect=dialect)
@@ -580,21 +564,20 @@ async def clone_scan(
     info = dbh.scanInstanceGet(id)
 
     if not info:
-        # self.error("Invalid scan ID.") 대신 HTTPException 사용
-        raise HTTPException(status_code=404, detail="Invalid scan ID.")
-
+        return jsonify_error(404, "Invalid scan ID.")
+    
     try:
         types = dbh.eventTypes()
         scanconfig = dbh.scanConfigGet(id)
     except Exception as e:
         logger.error(f"Error accessing DB for clone scan {id}: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Error loading scan configuration.")
+        return jsonify_error(404, "Error loading scan configuration.")
     
     scanname = info[0]
     scantarget = info[1]
 
     if scanname == "" or scantarget == "" or len(scanconfig) == 0:
-        raise HTTPException(status_code=500, detail="Something went wrong internally: Missing scan data.")
+        return jsonify_error(404, "Something went wrong internally: Missing scan data.")
 
     # CherryPy의 로직을 따름: 타겟 타입이 인식되지 않으면 따옴표로 감쌈 (HTML 엔티티 사용)
     targetType = SpiderFootHelpers.targetTypeFromString(scantarget)

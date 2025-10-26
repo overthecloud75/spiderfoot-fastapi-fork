@@ -77,74 +77,83 @@ sf.search = function (scan_id, value, type, postFunc) {
   );
 };
 
-sf.deleteScan = function(scan_id, callback) {
-    var req = $.ajax({
-      type: "GET",
-      url: "api/scandelete?id=" + scan_id
+sf.deleteScan = async function(scan_id, callback) {
+  try {
+    const response = await fetch(`/api/scandelete?id=${scan_id}`, {
+        method: "GET",
     });
-    req.done(function() {
-        alertify.success('<i class="bi bi-check-circle-fill"></i> <b>Scans Deleted</b><br/><br/>' + scan_id.replace(/,/g, "<br/>"));
-        sf.log("Deleted scans: " + scan_id);
-        callback();
-    });
-    req.fail(function (hr, textStatus, errorThrown) {
-        alertify.error('<i class="bi bi-x-circle-fill"></i> <b>Error</b><br/><br/>' + hr.responseText);
-        sf.log("Error deleting scans: " + scan_id + ": " + hr.responseText);
-    });
+
+    const data = await response.json(); 
+    if (!response.ok) {
+        alertify.error(`<i class="bi bi-x-circle-fill"></i> <b>Error</b><br/><br/>${data.message}`);
+        return;
+    }
+    alertify.success(`<i class="bi bi-check-circle-fill"></i> <b>Scans Deleted</b><br/><br/>${scan_id.replace(/,/g, "<br/>")}`);
+    if (callback) callback();
+  } catch (err) {
+      alertify.error(`<i class="bi bi-x-circle-fill"></i> <b>Network Error</b><br/><br/>${err}`);
+  }
 };
 
-sf.stopScan = function(scan_id, callback) {
-    var req = $.ajax({
-      type: "GET",
-      url: "api/stopscan?id=" + scan_id
-    });
-    req.done(function() {
-        alertify.success('<i class="bi bi-check-circle-fill"></i> <b>Scans Aborted</b><br/><br/>' + scan_id.replace(/,/g, "<br/>"));
-        sf.log("Aborted scans: " + scan_id);
-        callback();
-    });
-    req.fail(function (hr, textStatus, errorThrown) {
-        alertify.error('<i class="bi bi-x-circle-fill"></i> <b>Error</b><br/><br/>' + hr.responseText);
-        sf.log("Error stopping scans: " + scan_id + ": " + hr.responseText);
-    });
+sf.stopScan = async function(scan_id, callback) {
+  try {
+      const response = await fetch(`/api/stopscan?id=${scan_id}`, {
+          method: "GET",
+      });
+
+      const data = await response.json(); 
+
+      if (!response.ok) {
+          alertify.error(`<i class="bi bi-x-circle-fill"></i> <b>Error</b><br/><br/>${data.message}`);
+          return;
+      }
+      alertify.success(`<i class="bi bi-check-circle-fill"></i> <b>Scans Aborted</b><br/><br/>${scan_id.replace(/,/g, "<br/>")}`);
+      if (callback) callback();
+  } catch (err) {
+      alertify.error(`<i class="bi bi-x-circle-fill"></i> <b>Network Error</b><br/><br/>${err}`);
+  }
 };
 
-sf.rerunScan = function (scan_ids, callback) {
-  var req = $.ajax({
-      type: "GET",
-      url: "api/rerunscanmulti?ids=" + scan_ids
-  });
+sf.rerunScan = async function(scan_ids, callback) {
+  try {
+      const response = await fetch(`/api/rerunscanmulti?ids=${scan_ids}`, {
+          method: "GET",
+      });
 
-  req.done(function (data) {
-      alertify.success(
-          '<i class="bi bi-check-circle-fill"></i> <b>Rerun started</b><br/><br/>' +
-          (data.message ? data.message : scan_ids.replace(/,/g, "<br/>"))
-      );
-      sf.log("Re-run scans: " + scan_ids);
-      callback()
-  });
+      const data = await response.json(); 
 
-  req.fail(function (hr, textStatus, errorThrown) {
-      alertify.error(
-          '<i class="bi bi-x-circle-fill"></i> <b>Error</b><br/></br>' + hr.responseText
-      );
-      sf.log("Error rerunning scans: " + scan_ids + ": " + hr.responseText);
-  });
+      if (!response.ok) {
+          alertify.error(`<i class="bi bi-x-circle-fill"></i> <b>Error</b><br/><br/>${data.message || "Unknown error"}`);
+          return;
+      }
+      alertify.success(`<i class="bi bi-check-circle-fill"></i> <b>Rerun started</b><br/><br/>` + (data.message ? data.message : scan_ids.replace(/,/g, "<br/>")));
+      if (callback) callback();
+  } catch (err) {
+      alertify.error(`<i class="bi bi-x-circle-fill"></i> <b>Network Error</b><br/><br/>${err}`);
+  }
 };
 
-sf.fetchData = function (url, postData, postFunc) {
-  var req = $.ajax({
-    type: "POST",
-    url: url,
-    data: postData,
-    cache: false,
-    dataType: "json",
-  });
+sf.fetchData = async function (url, postData, postFunc) {
+  try {
+      const response = await fetch(url, {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json",
+          },
+          body: JSON.stringify(postData),
+          cache: "no-store",
+      });
 
-  req.done(postFunc);
-  req.fail(function (hr, status) {
-      alertify.error('<i class="bi bi-x-circle-fill"></i> <b>Error</b><br/>' + status);
-  });
+      const data = await response.json(); 
+      if (!response.ok) {
+          alertify.error(`<i class="bi bi-x-circle-fill"></i> <b>Error</b><br/>${data.message}`);
+          return;
+      }
+
+      if (postFunc) postFunc(data);
+  } catch (err) {
+      alertify.error(`<i class="bi bi-x-circle-fill"></i> <b>Network Error</b><br/>${err}`);
+  }
 };
 
 /*
@@ -187,12 +196,4 @@ sf.updateBsTooltips = function(root = document) {
     // 2️⃣ 새 Tooltip 생성
     new bootstrap.Tooltip(el, { container: 'body' });
   });
-};
-
-sf.log = function(message) {
-  if (typeof console?.log === "function") {
-    const d = new Date();
-    const datetime = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
-    console.log(`[${datetime}] ${message}`);
-  }
 };

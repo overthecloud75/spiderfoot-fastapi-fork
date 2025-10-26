@@ -1,3 +1,7 @@
+* 25/10/26
+    - 0.0.8 <br>
+        new scan html error fix <br>
+
 * 25/10/25
     - 0.0.7 <br>
         fix toggle error <br>

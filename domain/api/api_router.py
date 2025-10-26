@@ -3,13 +3,12 @@ from copy import deepcopy
 import multiprocessing as mp
 import json
 
-from fastapi import APIRouter, HTTPException, File, UploadFile, Form, Depends, Request
+from fastapi import APIRouter, File, UploadFile, Form, Depends, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from sflib import SpiderFoot
 from sfscan import startSpiderFootScanner
-from spiderfoot import SpiderFootDb
-from spiderfoot import SpiderFootHelpers
+from spiderfoot import SpiderFootDb, SpiderFootHelpers
 from domain.state import state, get_dbh
 from .api_schema import *
 from .api_crud import *
@@ -81,14 +80,15 @@ async def post_scan_list(
     summary="스캔 결과 요약 정보 반환",
 )
 async def scan_summary(
-    id: str = Form(..., description="스캔 고유 ID"),
-    by: str = Form(..., description="결과 필터링 기준 (예: type, module)"),
+    payload: ScanSummaryRequest,
     dbh: SpiderFootDb = Depends(get_dbh)
 ):
     """
     특정 스캔 ID에 대한 결과 요약 정보를 반환하며, 
     이벤트 유형별 개수, 최종 확인 시간, False Positive 개수 등을 포함합니다.
     """
+    id = payload.id
+    by = payload.by
     retdata = []
 
     try:
@@ -126,13 +126,13 @@ async def scan_summary(
     response_model=ScanStatus,
 )
 async def scanstatus(
-    id: str = Form(..., description="스캔 고유 ID"),
+    payload: ScanRequest,
     dbh: SpiderFootDb = Depends(get_dbh)
 ):
     """
     특정 스캔 ID에 대한 이름, 대상, 시간 정보, 상태 및 위험도 요약을 반환합니다.
     """
-    
+    id = payload.id
     data = dbh.scanInstanceGet(id)
 
     if not data:
@@ -171,8 +171,7 @@ async def scanstatus(
     response_model=ScanErrorResponse
 )
 async def scan_errors(
-    id: str = Form(..., description="스캔 고유 ID"),
-    limit: Optional[int] = Form(0), 
+    payload: ScanErrorsRequest,
     dbh: SpiderFootDb = Depends(get_dbh)
 ):
     """
@@ -180,10 +179,13 @@ async def scan_errors(
 
     Args:
         id (str): scan ID 
-        limit (Optional[int]): limit number of results 
+        limit (int): limit number of results 
         dbh (SpiderFootDb): Dependency injected database handler.
     """
     retdata = []
+
+    id = payload.id
+    limit = payload.limit
 
     try:
         data = dbh.scanErrors(id, limit)
@@ -205,7 +207,7 @@ async def scan_errors(
 
 @router.post("/scancorrelations")
 async def scan_correlations(
-    id: str = Form(..., description="스캔 고유 ID"),
+    payload: ScanRequest,
     dbh: SpiderFootDb = Depends(get_dbh)
 ):
     """
@@ -216,6 +218,7 @@ async def scan_correlations(
         dbh (SpiderFootDb): Dependency injected database handler.
 
     """
+    id = payload.id
     retdata = []
 
     try:
@@ -231,7 +234,7 @@ async def scan_correlations(
 
 @router.post("/scanopts")
 async def scanopts(
-    id: str = Form(..., description="스캔 고유 ID"),
+    payload: ScanRequest,
     dbh: SpiderFootDb = Depends(get_dbh)
 ):
     """
@@ -243,13 +246,13 @@ async def scanopts(
     Returns:
         dict: scan options for the specified scan
     """
+    id = payload.id
     ret = {}
 
     # 1. Get scan metadata
     meta = dbh.scanInstanceGet(id)
     if not meta:
-        # Instead of returning empty dict, raising an HTTPException is standard for 'not found'
-        raise HTTPException(status_code=404, detail=f"Scan ID {id} not found.")
+        return jsonify_error(404, f"Scan ID {id} not found.")
 
     # 2. Format start/finish times
     # meta is assumed to be a tuple/list: (id, name, target, started_timestamp, finished_timestamp, status)
@@ -295,10 +298,7 @@ async def scanopts(
 
 @router.post("/scanlog")
 async def scanlog(
-    id: str = Form(..., description="스캔 고유 ID"),
-    limit: Optional[int] = Form(0, description="Maximum number of log entries to return."),
-    rowId: Optional[str] = Form(None, description="Start or end row ID for pagination."),
-    reverse: Optional[str] = Form(None, description="Direction of log retrieval (e.g., 'true' for reverse chronological)."),
+    payload: ScanLogRequest,
     dbh: SpiderFootDb = Depends(get_dbh)
 ):
     """
@@ -310,6 +310,10 @@ async def scanlog(
         rowId: Row ID for pagination.
         reverse: Direction of log retrieval.
     """
+    id = payload.id
+    limit = payload.limit
+    rowId = payload.rowId
+    reverse = payload.reverse
     retdata = []
 
     try:
@@ -333,9 +337,9 @@ async def scanlog(
 async def savesettings(
     allopts: str = Form(...),
     token: str = Form(...,),
-    configFile: Optional[UploadFile] = File(None, description="Optional configuration file to upload."),
+    configFile: UploadFile = File(None, description="configuration file to upload."),
     dbh: SpiderFootDb = Depends(get_dbh), 
-) -> RedirectResponse:
+):
     """
     Save settings, also used to completely reset them to default.
     """
@@ -350,7 +354,7 @@ async def savesettings(
             contents = contents.decode('utf-8')
 
             # Parse the key=value configuration file format
-            tmp: Dict[str, Any] = {}
+            tmp = {}
             for line in contents.split("\n"):
                 line = line.strip()
                 if not line or line.startswith("#"): # Skip empty lines and comments
@@ -369,10 +373,7 @@ async def savesettings(
         except Exception as e:
             logger.error(f'save settings: {e}', exc_info=True)
             # Match original error handling for file parsing failure
-            raise HTTPException(
-                status_code=400,
-                detail=f"Failed to parse input file. Was it generated from SpiderFoot? ({e})"
-            )
+            return jsonify_error(400, f"Failed to parse input file. Was it generated from SpiderFoot? ({e})")
         finally:
             # Close the file stream after reading
             configFile.file.close()
@@ -386,7 +387,7 @@ async def savesettings(
                 status_code=303 # HTTP 303 See Other is generally preferred for POST success redirects
             )
         # Failure error
-        raise HTTPException(status_code=500, detail="Failed to reset settings.")
+        return jsonify_error(500, "Failed to reset settings.")
 
     # 3. Save Settings
     try:
@@ -405,13 +406,11 @@ async def savesettings(
         # Save the finalized, serialized config to the database
         dbh.configSet(sf.configSerialize(new_config))
     except json.JSONDecodeError:
-        raise HTTPException(status_code=400, detail="The 'allopts' data is not valid JSON.")
+        return jsonify_error(400, "The 'allopts' data is not valid JSON.")
     except Exception as e:
-        # Catch any other processing errors
-        raise HTTPException(
-            status_code=500,
-            detail=f"Processing one or more of your inputs failed: {e}"
-        )
+        logger.error(e, exc_info=True)
+        return jsonify_error(500, f"Processing one or more of your inputs failed: {e}")
+
 
     # 5. Success Redirect
     return RedirectResponse(
@@ -422,11 +421,11 @@ async def savesettings(
 @router.post("/startscan")
 def startscan(
     request: Request,
-    scanname: str = Form(..., description="Scan name."),
-    scantarget: str = Form(..., description="Scan target."),
-    modulelist: Optional[str] = Form(None, description="Comma separated list of modules (prefixed with 'module_' in original)."),
-    typelist: Optional[str] = Form(None, description="Comma separated list of event types (prefixed with 'type_' in original)."),
-    usecase: Optional[str] = Form(None, description="Selected module group (passive, investigate, footprint, all)."),
+    scanname: str = Form(None, description="Scan name."),
+    scantarget: str = Form(None, description="Scan target."),
+    modulelist: str = Form(None, description="Comma separated list of modules (prefixed with 'module_' in original)."),
+    typelist: str = Form(None, description="Comma separated list of event types (prefixed with 'type_' in original)."),
+    usecase: str = Form(None, description="Selected module group (passive, investigate, footprint, all)."),
     dbh: SpiderFootDb = Depends(get_dbh)
 ):
     """Initiate a scan."""
@@ -513,10 +512,7 @@ def startscan(
         logger.error(f"[-] Scan [{scanId}] failed: {e}", exc_info=True)
         return jsonify_error(500, f"Scan [{scanId}] failed: {e}") 
 
-    # 7. Wait for Initialization (Blocking operation)
-    # The original code blocks the web process until the scan is in the DB.
-    # In a modern API, this should ideally be an async check, but we replicate the blocking behavior.
-    
+    # 7. Wait for Initialization (Blocking operation)    
     timeout = 10
     start_time = time.time()
     while dbh.scanInstanceGet(scanId) is None and (time.time() - start_time) < timeout:
@@ -526,18 +522,10 @@ def startscan(
     if dbh.scanInstanceGet(scanId) is None:
         return jsonify_error(500, "Scan failed to initialize within the timeout.") 
 
-    # 8. Success Response
-    if 'application/json' in request.headers.get('Accept', ''):
-        # JSON response for API clients
-        return JSONResponse(
-            content={"SUCCESS": scanId},
-            status_code=200
-        )
-
-    # Redirect response for browser clients
-    return RedirectResponse(
-        url=f"/scaninfo?id={scanId}",
-        status_code=303 # 303 See Other is appropriate for POST success redirect
+    # JSON response for API clients
+    return JSONResponse(
+        content={"scanId": scanId},
+        status_code=200
     )
 
 @router.post("/search")
@@ -744,9 +732,8 @@ async def scandelete(
     """
     # 1. Input Validation (No scan specified)
     if not id.strip():
-        # Replaces self.jsonify_error('404', "No scan specified")
         logger.error('No scan specified', exc_info=True)
-        raise HTTPException(status_code=404, detail="No scan specified.")
+        return jsonify_error(404, "No scan specified.")
 
     ids = [i.strip() for i in id.split(',') if i.strip()]
 
@@ -757,15 +744,12 @@ async def scandelete(
         if not res:
             # Replaces self.jsonify_error('404', f"Scan {scan_id} does not exist")
             logger.error(f"Scan {scan_id} does not exist.", exc_info=True)
-            raise HTTPException(status_code=404, detail=f"Scan {scan_id} does not exist.")
+            return jsonify_error(404, f"Scan {scan_id} does not exist.")
 
         scan_status = res[5]
         if scan_status in ["RUNNING", "STARTING", "STARTED"]:
             # Replaces self.jsonify_error('400', ...)
-            raise HTTPException(
-                status_code=400,
-                detail=f"Scan {scan_id} is {scan_status}. You cannot delete running scans."
-            )
+            return jsonify_error(400, f"Scan {scan_id} is {scan_status}. You cannot delete running scans.")
 
     # 3. Execution: Delete Scans
     for scan_id in ids:
@@ -791,8 +775,7 @@ def stopscan(
     """
     # 1. Input Validation (No scan specified)
     if not id.strip():
-        # Replaces self.jsonify_error('404', "No scan specified")
-        raise HTTPException(status_code=404, detail="No scan specified.")
+        return jsonify_error(404, "No scan specified.")
 
     ids = [i.strip() for i in id.split(',') if i.strip()]
 
@@ -801,25 +784,18 @@ def stopscan(
         res = dbh.scanInstanceGet(scan_id)
 
         if not res:
-            # Replaces self.jsonify_error('404', f"Scan {scan_id} does not exist")
-            raise HTTPException(status_code=404, detail=f"Scan {scan_id} does not exist.")
+            return jsonify_error(404, f"Scan {scan_id} does not exist.")
 
         scan_status = res[5]
 
         if scan_status == "FINISHED":
-            # Replaces self.jsonify_error('400', ...)
-            raise HTTPException(status_code=400, detail=f"Scan {scan_id} has already finished.")
+            return jsonify_error(400, f"Scan {scan_id} has already finished.")
 
         if scan_status == "ABORTED":
-            # Replaces self.jsonify_error('400', ...)
-            raise HTTPException(status_code=400, detail=f"Scan {scan_id} has already aborted.")
+            return jsonify_error(400, f"Scan {scan_id} has already aborted.")
 
         if scan_status not in ["RUNNING", "STARTING"]:
-            # Replaces self.jsonify_error('400', ...)
-            raise HTTPException(
-                status_code=400,
-                detail=f"The scan {scan_id} is in state '{scan_status}'. Only RUNNING or STARTING scans can be stopped."
-            )
+            return jsonify_error(400, f"The scan {scan_id} is in state '{scan_status}'. Only RUNNING or STARTING scans can be stopped.")
 
     # 3. Execution: Request Abortion
     for scan_id in ids:
@@ -845,14 +821,14 @@ async def rerun_scan(
     
     info = dbh.scanInstanceGet(id)
     if not info:
-        raise HTTPException(status_code=404, detail="Invalid scan ID.")
+        return jsonify_error(404, "Invalid scan ID.")
 
     scanname = info[0]
     scantarget = info[1]
 
     scanconfig = dbh.scanConfigGet(id)
     if not scanconfig:
-        raise HTTPException(status_code=500, detail=f"Error loading config from scan: {id}")
+        return jsonify_error(500, f"Error loading config from scan: {id}")
 
     modlist = scanconfig.get('_modulesenabled', '').split(',')
     if "sfp__stor_stdout" in modlist:
@@ -874,17 +850,17 @@ async def rerun_scan(
         p.start()
     except Exception as e:
         logger.error(f"[-] Scan [{scanId}] failed: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Scan [{scanId}] failed to start: {e}")
+        return jsonify_error(500, f"Scan [{scanId}] failed to start: {e}")
 
     start_time = time.time()
     while dbh.scanInstanceGet(scanId) is None:
         if time.time() - start_time > 10: # 10초 타임아웃
             logger.error(f"[-] Scan [{scanId}] failed to initialize in time.", exc_info=True)
-            raise HTTPException(status_code=500, detail=f"Scan [{scanId}] failed to initialize in time.")
+            return jsonify_error(500, f"Scan [{scanId}] failed to initialize in time.")
         logger.info("Waiting for the scan to initialize...")
         time.sleep(1)
 
-    return RedirectResponse(url=f"{state.docroot}/scaninfo?id={scanId}", status_code=302)
+    return RedirectResponse(url=f"/scaninfo?id={scanId}", status_code=302)
 
 @router.get("/rerunscanmulti")
 async def rerun_scan_multi(
@@ -908,7 +884,7 @@ async def rerun_scan_multi(
         # 1. Get existing scan info
         info = dbh.scanInstanceGet(id)
         if not info:
-            raise HTTPException(status_code=400, detail=f"Invalid scan ID: {id}.")
+            return jsonify_error(400, f"Invalid scan ID: {id}.")
 
         # 2. Get existing scan configuration
         scanconfig = dbh.scanConfigGet(id)
@@ -917,7 +893,7 @@ async def rerun_scan_multi(
         targetType = None
 
         if len(scanconfig) == 0:
-            raise HTTPException(status_code=500, detail="Something went wrong internally: Scan configuration not found.")
+            return jsonify_error(500, "Something went wrong internally: Scan configuration not found.")
 
         # 3. Process module list
         modlist = scanconfig['_modulesenabled'].split(',')
@@ -928,7 +904,7 @@ async def rerun_scan_multi(
         targetType = SpiderFootHelpers.targetTypeFromString(scantarget)
         if targetType is None:
             # Should never be triggered for a re-run scan..
-            raise HTTPException(status_code=500, detail="Invalid target type. Could not recognize it as a target SpiderFoot supports.")
+            return jsonify_error(500, "Invalid target type. Could not recognize it as a target SpiderFoot supports.")
 
         # 5. Start running a new scan in a separate process
         scanId = SpiderFootHelpers.genScanInstanceId()
@@ -942,7 +918,7 @@ async def rerun_scan_multi(
             p.start()
         except Exception as e:
             logger.error(f"[-] Scan [{scanId}] failed: {e}", exc_info=True)
-            raise HTTPException(status_code=500, detail=f"Scan [{scanId}] failed to start: {e}")
+            return jsonify_error(500, f"Scan [{scanId}] failed to start: {e}")
 
         # 6. Wait until the scan has initialized (Polling a blocking DB call)
         # This polling loop *blocks* the current FastAPI worker!
@@ -957,21 +933,13 @@ async def rerun_scan_multi(
         while dbh.scanInstanceGet(scanId) is None:
             if time.time() - start_time > timeout:
                 logger.error(f"[-] Scan [{scanId}] initialization timed out.", exc_info=True)
-                raise HTTPException(status_code=500, detail=f"Scan [{scanId}] initialization timed out.")
+                return jsonify_error(500, f"Scan [{scanId}] initialization timed out.")
             logger.info("Waiting for the scan to initialize...")
             time.sleep(1) # Blocking sleep!
 
         new_scan_ids.append(scanId)
 
     # 7. Return success response
-    # The original returned rendered HTML, but FastAPI typically returns JSON/redirects.
-    # To mimic returning the "Scan list page HTML," we can return a JSON with a redirect
-    # or a flag for the frontend to render the list.
-
-    # NOTE: The original code rendered a template:
-    # return templ.render(rerunscans=True, docroot=self.docroot, pageid="SCANLIST", version=__version__)
-
-    # FastAPI response:
     return {
         "message": f"Successfully started re-run for scans. New IDs: {', '.join(new_scan_ids)}",
         "rerunscans": True,

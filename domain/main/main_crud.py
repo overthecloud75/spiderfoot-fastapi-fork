@@ -117,10 +117,5 @@ def jsonify_error(status: int, message: str) -> JSONResponse:
     """JSON 형식의 에러 응답을 반환합니다."""
     return JSONResponse(
         status_code=status,
-        content={
-            'error': {
-                'http_status': status,
-                'message': message,
-            }
-        }
+        content={'message': message}
     )

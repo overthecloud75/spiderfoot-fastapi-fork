@@ -737,7 +737,6 @@
 
     function downloadLogs(instanceId) {
         $("#loader").show();
-        sf.log("Loading logs for scan: " + instanceId);
         var efr = document.getElementById('exportframe');
         var urlBase = 'scanexportlogs?id=';
         efr.src = urlBase + instanceId;
@@ -772,7 +771,6 @@
         }
 
         if (currentSection == "btn-graph") {
-            sf.log("Loading visualisation for scan: " + instanceId);
             efr.src = 'scanviz?id=' + instanceId + '&gexf=1';
         }
 
@@ -847,12 +845,9 @@
         var status = document.getElementById("scanstatusbadge").innerHTML;
 
         if (status == "ERROR-FAILED" || status == "FINISHED" || status == "ABORTED") {
-            sf.log("Scan is " + status);
             clearInterval(refreshSummaryInterval);
             return;
         }
-
-        sf.log("Scan is " + status + ". Refreshing scan summary ...");
 
         for (var i = 0; i < dataloaders.length; i++) {
             if (!loadersrunning) {

@@ -17,10 +17,27 @@ class ScanStatus(BaseModel):
     status: str
     risk_matrix: RiskMatrix
 
+class ScanRequest(BaseModel):
+    id: str
+
+class ScanErrorsRequest(BaseModel):
+    id: str
+    limit: int = 0
+
+class ScanSummaryRequest(BaseModel):
+    id: str
+    by: str
+
 class ScanError(BaseModel):
     generated: str
     module: str
     error_message: str
+
+class ScanLogRequest(BaseModel):
+    id: str  
+    limit: int = 0  
+    rowId: str = None  
+    reverse: str = None  
 
 ScanErrorResponse = List[ScanError]
 
